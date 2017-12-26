@@ -19,29 +19,43 @@ import java.util.concurrent.CountDownLatch;
 /**
  * @author Akshay
  * 
- * I have used multi-threading to solve this problem. As soon as the input is entered through command line(input here
- * represents the array of file names), an array of threads are executed. The number of threads in the thread pool 
- * depends upon the number of files that have been entered. Each thread then performs the translation action and uses the common
- * resources in turns (since the common resources have been synchronized) to write data to both Batched.txt and AsYouGo.txt. 
+ *         I have used multi-threading to solve this problem. As soon as the
+ *         input is entered through command line(input here represents the array
+ *         of file names), an array of threads are executed. The number of
+ *         threads in the thread pool depends upon the number of files that have
+ *         been entered. Each thread then performs the translation action and
+ *         uses the common resources in turns (since the common resources have
+ *         been synchronized) to write data to both Batched.txt and AsYouGo.txt.
  * 
- * Since we are using the translation API provided by Google, there are certain limitations to the number of requests
- * that could be sent. A possible problem that may arrive is if the program is in the middle of processing and the API 
- * goes offline. Now we are stuck with some data that is processed and some data that is not processed/translated. A 
- * fallback mechanism in this situation would be to at least write the data that has already been processed to Batched.txt
- * (Since the method that writes data to AsYouGo.txt is called immediately after each word is processed, we don't have to worry about that).
- * Hence I decided to spin a new thread to handle this writing of the translated words to Batched.txt. This thread would 
- * constantly check my if any batch has been processed and if it is, then the data is written to the Batched.txt. 
- * This would make sure that whenever the API goes offline in the middle of processing, the data
- * that has already been processed, at least that is written to Batched.txt. But, I realized it made the solution too 
- * complicated so I just use the CountDownLatch class to indicate if the threads are still running. And whenever
- * a thread encounters that the API is offline, the latch counter is decremented, indicating that this thread has now
- * terminated. Now, since the API is offline, all the threads in the thread pool would decrement the latch counter and
- * hence all the threads would get terminated. Once the threads are terminated forcefully like this, the BatchedIncomplete()
- * method is called. This method will write whatever data that has been processed into the Batched.txt in a manner asked in
- * the problem.
+ *         Since we are using the translation API provided by Google, there are
+ *         certain limitations to the number of requests that could be sent. A
+ *         possible problem that may arrive is if the program is in the middle
+ *         of processing and the API goes offline. Now we are stuck with some
+ *         data that is processed and some data that is not
+ *         processed/translated. A fallback mechanism in this situation would be
+ *         to at least write the data that has already been processed to
+ *         Batched.txt (Since the method that writes data to AsYouGo.txt is
+ *         called immediately after each word is processed, we don't have to
+ *         worry about that). Hence I decided to spin a new thread to handle
+ *         this writing of the translated words to Batched.txt. This thread
+ *         would constantly check my if any batch has been processed and if it
+ *         is, then the data is written to the Batched.txt. This would make sure
+ *         that whenever the API goes offline in the middle of processing, the
+ *         data that has already been processed, at least that is written to
+ *         Batched.txt. But, I realized it made the solution too complicated so
+ *         I just use the CountDownLatch class to indicate if the threads are
+ *         still running. And whenever a thread encounters that the API is
+ *         offline, the latch counter is decremented, indicating that this
+ *         thread has now terminated. Now, since the API is offline, all the
+ *         threads in the thread pool would decrement the latch counter and
+ *         hence all the threads would get terminated. Once the threads are
+ *         terminated forcefully like this, the BatchedIncomplete() method is
+ *         called. This method will write whatever data that has been processed
+ *         into the Batched.txt in a manner asked in the problem.
  * 
- * I tried to do a Thread.sleep(500), so that the API does not detect a spam of requests from my network. But, that didn't work
- * and the API still showed at 302 after a certain number of requests.
+ *         I tried to do a Thread.sleep(500), so that the API does not detect a
+ *         spam of requests from my network. But, that didn't work and the API
+ *         still showed at 302 after a certain number of requests.
  * 
  *
  */
@@ -70,15 +84,20 @@ public class Application extends Thread {
 	private static String[] input;
 
 	/**
-	 * Boolean variable to indicate if the API we are working with is offline or online.
+	 * Boolean variable to indicate if the API we are working with is offline or
+	 * online.
 	 */
 	private static boolean isApiOffline = false;
 
 	/**
-	 * Default constructor for initializing all the elements needed to perform the task.
+	 * Default constructor for initializing all the elements needed to perform
+	 * the task.
 	 * 
-	 * @param input This represents the array of file names that are passed through command line.
-	 * @throws IOException Exception thrown for handling IO operations.
+	 * @param input
+	 *            This represents the array of file names that are passed
+	 *            through command line.
+	 * @throws IOException
+	 *             Exception thrown for handling IO operations.
 	 */
 	Application(String[] input) throws IOException {
 
@@ -96,12 +115,14 @@ public class Application extends Thread {
 
 	}
 
-	/** 
-	 * Execution starts in this method. Threads spin off from this method and perform their
-	 * individual tasks.
+	/**
+	 * Execution starts in this method. Threads spin off from this method and
+	 * perform their individual tasks.
 	 * 
-	 * @param args Name of the files that are passed through command line.
-	 * @throws IOException Exception handled for IO operations.
+	 * @param args
+	 *            Name of the files that are passed through command line.
+	 * @throws IOException
+	 *             Exception handled for IO operations.
 	 */
 	public static void main(String[] args) throws IOException {
 
@@ -126,29 +147,30 @@ public class Application extends Thread {
 		if (getApiOffline()) {
 			System.out.println("Translate API is offline; Writing the translated words to Batched.txt in batches");
 			BatchedIncomplete();
-		}
-		else
+		} else
 			BatchedTxt();
 		bwBatched.close();
 		bwAsYouGo.close();
 
 	}
 
-	/** 
-	 * Separate methods have been written for writing data to Batched.txt; that is when the API is offline 
-	 * and when the API is online. This one represents the method which is called when the threads
-	 * encounters that the API is offline. This method is invoked only after all the threads have 
-	 * been terminated.
+	/**
+	 * Separate methods have been written for writing data to Batched.txt; that
+	 * is when the API is offline and when the API is online. This one
+	 * represents the method which is called when the threads encounters that
+	 * the API is offline. This method is invoked only after all the threads
+	 * have been terminated.
 	 * 
-	 * NOTE: This method resembles the BatchedTxt() method which performs a similar operation as
-	 * 		 this method. Separate methods have been written to logically differentiate and 
-	 * 		 indicate as to what is happening in the code flow. 
-	 *  
+	 * NOTE: This method resembles the BatchedTxt() method which performs a
+	 * similar operation as this method. Separate methods have been written to
+	 * logically differentiate and indicate as to what is happening in the code
+	 * flow.
+	 * 
 	 * 
 	 */
 	private static void BatchedIncomplete() {
 
-		//System.out.println("cool" + temp.entrySet());
+		// System.out.println("cool" + temp.entrySet());
 		System.out.println("Status of a line number for all files" + forCounter.entrySet());
 
 		int counter = 1;
@@ -190,12 +212,14 @@ public class Application extends Thread {
 	}
 
 	/**
-	 * This method is called by each thread that exist in the project. It has been synchronized to avoid 
-	 * race conditions.
-	 *  
-	 * @param result This represents a single translated word from a file which has to be written as soon as it is 
-	 * 				 processed.
-	 * @throws IOException Exception thrown for handling IO operations.
+	 * This method is called by each thread that exist in the project. It has
+	 * been synchronized to avoid race conditions.
+	 * 
+	 * @param result
+	 *            This represents a single translated word from a file which has
+	 *            to be written as soon as it is processed.
+	 * @throws IOException
+	 *             Exception thrown for handling IO operations.
 	 */
 	public static synchronized void writeToAsYouGoTxt(String result) throws IOException {
 
@@ -205,8 +229,9 @@ public class Application extends Thread {
 	}
 
 	/**
-	 * After all threads have finished processing, this method is called to write data to Batched.txt. This method
-	 * sorts the data in each batch and then writes it to the Batched.txt.
+	 * After all threads have finished processing, this method is called to
+	 * write data to Batched.txt. This method sorts the data in each batch and
+	 * then writes it to the Batched.txt.
 	 */
 	public static void BatchedTxt() {
 		System.out.println(forCounter);
@@ -214,11 +239,10 @@ public class Application extends Thread {
 
 		while (true) {
 			if (forCounter.size() != 0) {
-
+				
 				if (forCounter.get(counter) != input.length)
 					continue;
 				else {
-
 					List<String> data = new ArrayList<>();
 
 					for (String s : input) {
@@ -253,7 +277,8 @@ public class Application extends Thread {
 	/**
 	 * This method strips the path from the input file names.
 	 * 
-	 * @param data This array represents the input file names.
+	 * @param data
+	 *            This array represents the input file names.
 	 * 
 	 * @return return the name of the files without their paths.
 	 */
@@ -269,21 +294,24 @@ public class Application extends Thread {
 	}
 
 	/**
-	 * This map stores data that is used for processing and organizing the output. 
+	 * This map stores data that is used for processing and organizing the
+	 * output.
 	 */
 	public static Map<String, String> getTemp() {
 		return temp;
 	}
 
 	/**
-	 * This map stores data that is used for processing and organizing the output.
+	 * This map stores data that is used for processing and organizing the
+	 * output.
 	 */
 	public static Map<Integer, Integer> getForCounter() {
 		return forCounter;
 	}
 
 	/**
-	 * @param isApiOfflineNew sets the status of the API availabilty.
+	 * @param isApiOfflineNew
+	 *            sets the status of the API availabilty.
 	 */
 	public static void setApiOffline(boolean isApiOfflineNew) {
 		isApiOffline = isApiOfflineNew;
