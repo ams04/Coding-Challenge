@@ -1,6 +1,6 @@
 # Coding-Challenge
 
-sing the translation service described below, create a command line tool in Java to translate an arbitrary number of files 
+Using the translation service described below, create a command line tool in Java to translate an arbitrary number of files 
 from English to Swedish. (3 examples provided). The tool should take the names of the files as arguments. Although the example
 files are small, the solution should be able to handle arbitrarily large files; that is, assume each input file and output file
 may be larger in bytes than the memory allocated to the JVM.  All specified input files should be read and translated concurrently; 
