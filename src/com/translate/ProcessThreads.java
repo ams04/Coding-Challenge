@@ -15,8 +15,8 @@ import org.json.JSONException;
  * 
  * This class is used to process each input file. Since this class extends the Thread class, there would be 
  * multiple invocations of this class. Each thread processes the output individually and performs a write operation
- * on AsYouGo.txt file. This method{@see Application#BatchedTxt()} writes the translated data to AsYouGo.txt as soon
- * as they are translated. The method{@see Application#BatchedTxt()} that performs that write operations has been 
+ * on AsYouGo.txt file. This method{@see Application#writeToAsYouGoTxt()} writes the translated data to AsYouGo.txt as soon
+ * as they are translated. The method{@see Application#writeToAsYouGoTxt()} that performs that write operations has been 
  * synchronized  to avoid race a condition. This might sometimes slow down the program because a thread has to wait for
  * the resources to get released but it is essential in a multi-threaded environment to keep resources like these 
  * available for everyone in a safe manner.
@@ -96,8 +96,8 @@ public class ProcessThreads extends Thread {
 	 * @throws JSONException Exception handled for JSON parsing exceptions.
 	 * @throws InterruptedException This is meant for the Thread.sleep() method.
 	 * 
-	 * Note: I performed Thread.sleep() to test if the API gets saturated if we send request after a reasonably long
-	 * 		 long interval of 0.5 seconds. Because initially the project would send requests within milliseconds and 
+	 * Note: I performed Thread.sleep() to test if the API gets saturated if we send requests after a reasonably long
+	 * 		 time interval of 0.5 seconds. Because initially the project would send requests within milliseconds and 
 	 * 		 I thought maybe a delay could prevent the traffic overload to the API and hence prevent the API from
 	 * 		 sending a 302 http response.
 	 */

@@ -21,15 +21,14 @@ import java.util.concurrent.CountDownLatch;
  * 
  * I have used multi-threading to solve this problem. As soon as the input is entered through command line(input here
  * represents the array of file names), an array of threads are executed. The number of threads in the thread pool 
- * depends upon the
- * number of files that have been entered. Each thread then performs the translation action and uses the common
- * resources in turns (since the common resources have been synchronized) to write data to both Batched.txt and 
- * AsYouGo.txt. 
+ * depends upon the number of files that have been entered. Each thread then performs the translation action and uses the common
+ * resources in turns (since the common resources have been synchronized) to write data to both Batched.txt and AsYouGo.txt. 
  * 
  * Since we are using the translation API provided by Google, there are certain limitations to the number of requests
  * that could be sent. A possible problem that may arrive is if the program is in the middle of processing and the API 
  * goes offline. Now we are stuck with some data that is processed and some data that is not processed/translated. A 
- * fallback mechanism in this situation would be to at least write the data that has already been processed to Batched.txt.
+ * fallback mechanism in this situation would be to at least write the data that has already been processed to Batched.txt
+ * (Since the method that writes data to AsYouGo.txt is called immediately after each word is processed, we don't have to worry about that).
  * Hence I decided to spin a new thread to handle this writing of the translated words to Batched.txt. This thread would 
  * constantly check my if any batch has been processed and if it is, then the data is written to the Batched.txt. 
  * This would make sure that whenever the API goes offline in the middle of processing, the data
@@ -76,7 +75,7 @@ public class Application extends Thread {
 	private static boolean isApiOffline = false;
 
 	/**
-	 * Default constructor invoked for initializing all the elements needed to perform the task.
+	 * Default constructor for initializing all the elements needed to perform the task.
 	 * 
 	 * @param input This represents the array of file names that are passed through command line.
 	 * @throws IOException Exception thrown for handling IO operations.
@@ -124,10 +123,12 @@ public class Application extends Thread {
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
-		if (getApiOffline()){
-			System.out.println("Translate API offline; Writing the translated words to Batched.txt in batches");
-			BatchedIncomplete();}
-		BatchedTxt();
+		if (getApiOffline()) {
+			System.out.println("Translate API is offline; Writing the translated words to Batched.txt in batches");
+			BatchedIncomplete();
+		}
+		else
+			BatchedTxt();
 		bwBatched.close();
 		bwAsYouGo.close();
 
